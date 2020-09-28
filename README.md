@@ -12,7 +12,7 @@
 
 ## 主要内容
 1. [基本指令](01-essential-commands.md)
-2. Operation of Running Systems
+2. [Operation of Running Systems](02-operation-of-running-systems.md)
 3. User and Group Management
 4. Networking
 5. Service Configuration
