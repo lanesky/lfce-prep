@@ -124,3 +124,32 @@ Linux d0cc44ac1f1c.mylabserver.com 3.10.0-1127.10.1.el7.x86_64 #1 SMP Wed Jun 3 
 -  一些参考资料
   - https://wiki.gentoo.org/wiki/GRUB2/zh-cn
   - https://wiki.centos.org/HowTos/Grub2
+  
+## 如何使用工具进行自动化
+
+最常用的工具就是Shell，Python，Ruby这样的Script语言。比如Yum就是Python写的，sosreport也是。
+
+## 如何制定一个具有现实意义的Plan
+
+这一部分虽然和技术看起来无关，但是就如何制定个人或组织的长期的技术成长计划来说却是重要的。有一个SMART原则可以用于衡量您的Plan是否合适。
+- Is it specific?
+- Is it Measurable?
+- Is it Achieveable?
+- Is it Result-focused?
+- Is it Time-bound?
+
+
+## 如何管理已有系统的变化？
+使用版本配置工具以及各种配置工具。 比如Git，Terraform，Ansible等等。这一点就可以和"Infrastructure as Code"这个概念联系起来了。
+
+
+
+
+
+
+
+
+
+
+
+
