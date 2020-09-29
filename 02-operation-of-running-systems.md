@@ -142,6 +142,53 @@ Linux d0cc44ac1f1c.mylabserver.com 3.10.0-1127.10.1.el7.x86_64 #1 SMP Wed Jun 3 
 ## 如何管理已有系统的变化？
 使用版本配置工具以及各种配置工具。 比如Git，Terraform，Ansible等等。这一点就可以和"Infrastructure as Code"这个概念联系起来了。
 
+## 如何选择配置管理工具(Configuraiton Management Tool)
+现在流行的配置管理工具有不少，名气比较大的有Terraform，Ansible，Chef，Puppet等等。
+不同的管理工具有不同的特性和使用要求，你可以根据你所在的Team的特点来进行选择。
+
+- Terraform: 不需安装代理，具有等幂性（不会重复操作）。 
+- Ansible: 不需安装代理。内置tag属性可以实现类似于pipeline的功能。需要SSH到Server。
+- Chef: 需要在Node上安装代理。多少需要对Ruby知识。
+- Puppet:需要在Node上安装代理。具有等幂性。多少需要对Ruby知识。
+
+## 如何确保硬件的完整性(Integrity)和可用性(Availability)
+
+完整性(Integrity)主要是涉及到物理安全(Physical Security)。比如在构建data center时候需要考虑以下几点：
+- 构建地点是否有灾难的可能性。（估计不会有人在核电站附近搞一个数据中心。）
+- 人员进出时是怎么管理门禁的。（胸章，指纹，还是人脸识别？）
+- 有没有对温度，湿度的监控？  （A**一次东京zone的当机据说就是和温度监控出了问题有关系。）
+- 机柜有没有倾斜？ （不是开玩笑，这是有可能导致硬件产生问题的，事实上这样的事情曾经发生过。）
+
+硬件可用性(Availability)主要是指Firmware的更新。母版有Firmware，NiC有Firmware，SAN有Firmware。
+保护Firmware的可用也是保障硬件可用性重要的一环。
+
+### 如何更新OS上的软件包
+CentOS上有yum，Debian（比如Ubuntu）上有apt。 
+注意yum是"YellowdogUpdater,Modified"的缩写。Apt是"AdvancedPackagingTool"的缩写。
+
+Yum和Apt的用法非常相似。下面是Yum的几个例子：
+```
+yum install bash
+yum update 
+yum install http://some.path/bash.rpm
+```
+### 如何进行事故（Incident）管理
+
+第一个是进行RCA。在RCA讨论中，需要着眼于分析下面几项,
+- 发生了什么事情？
+- 怎么发生的？
+- 为什么会发生？
+- 如果补救以防止再次发生？
+
+RCA之后很重要的一点就是从长远考虑以防止相同事故再次发生。
+
+
+
+
+
+
+
+
 
 
 
