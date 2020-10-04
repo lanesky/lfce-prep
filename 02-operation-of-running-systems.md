@@ -382,7 +382,249 @@ Number of process IDs: 601
 Number of events: 1825
 ```
 
-`auditd` 可以用于对于特定文件的更新的审计。[auditdでLinuxのファイル改竄検知を行う](https://qiita.com/minamijoyo/items/0d77959a869e458d850a) 是一个很好的post，可以参考。 
+`auditd` 可以用于对于特定文件的更新的审计。[auditdでLinuxのファイル改竄検知を行う](https://qiita.com/minamijoyo/items/0d77959a869e458d850a) 是一个很好的post，可以参考。
+
+## 如何进行紧急恢复
+
+如果root password忘掉，或者由于fstab问题整个machine不能启动了，那么可以通过三种方式来进行紧急修复。这三种方式包括`rd.break`, `recure mode`, `emergency mode`。
+
+### 关于rd.break方法
+
+以下的两片文章都给出了关于如何使用`rd.brak`更改root password的步骤。
+[RHEL7破解密码操作步骤](https://www.cnblogs.com/Enzoo/p/9999031.html)
+[CentOS7 RHEL7 rootパスワード変更](https://qiita.com/cyberblack28/items/9ba9ff301ec6fba1e5f8)
+
+但遗憾的是，这两篇文章都没有说明为什么需要执行`touch /.autolabel`的理由。理由是在`chroot jail`下生成的password保存在`/etc/shadow`中，
+但是该文件没有附上[扩展属性](https://zh.wikipedia.org/wiki/%E6%89%A9%E5%B1%95%E6%96%87%E4%BB%B6%E5%B1%9E%E6%80%A7)。这会导致SELinux无法读取该文件。
+那么这个时候需要Relabel文件系统。`touch /.autolabel`的目的就是为了激活Relabeling这个过程。
+
+
+### 关于recure mode和emergency mode
+
+recure mode会开一个single user shell，并会启动某些service。Emergency mode也会开一个single user shell，但是和recure mode最大的区别在于，root file system会被设置为只读。
+这点可以通过`mount`命令来进行观察。
+
+如果需要在emercy mode下面更改什么，需要remount根目录，比如`mount -o remount,rw /`。
+
+可以参考此文, [CentOS / RHEL 7 : How to boot into Rescue Mode or Emergency Mode](https://www.thegeekdiary.com/centos-rhel-7-how-to-boot-into-rescue-mode-or-emergency-mode/)
+
+
+## 使用`udev`来探知和管理设备
+
+### 以下说明如何使用`udev`为网卡更换名字，从'ens5'到`middleman`。
+
+首先使用`udevadm info`查看信息。
+```
+[root@d0cc44ac1f1c ~]# udevadm info -a -p /sys/class/net/ens5
+
+Udevadm info starts with the device specified by the devpath and then
+walks up the chain of parent devices. It prints for every device
+found, all possible attributes in the udev rules key format.
+A rule to match, can be composed by the attributes of the device
+and the attributes from one single parent device.
+
+  looking at device '/devices/pci0000:00/0000:00:05.0/net/ens5':
+    KERNEL=="ens5"
+    SUBSYSTEM=="net"
+    DRIVER==""
+    ATTR{mtu}=="9001"
+    ATTR{type}=="1"
+    ATTR{netdev_group}=="0"
+    ATTR{flags}=="0x1003"
+    ATTR{dormant}=="0"
+    ATTR{proto_down}=="0"
+    ATTR{addr_assign_type}=="0"
+    ATTR{dev_id}=="0x0"
+    ATTR{gro_flush_timeout}=="0"
+    ATTR{iflink}=="2"
+    ATTR{addr_len}=="6"
+    ATTR{address}=="0a:db:1f:a8:1d:1f"
+    ATTR{operstate}=="up"
+    ATTR{carrier_changes}=="3"
+    ATTR{broadcast}=="ff:ff:ff:ff:ff:ff"
+    ATTR{tx_queue_len}=="1000"
+    ATTR{dev_port}=="0"
+    ATTR{ifalias}==""
+    ATTR{ifindex}=="2"
+    ATTR{link_mode}=="0"
+    ATTR{carrier}=="1"
+
+  looking at parent device '/devices/pci0000:00/0000:00:05.0':
+    KERNELS=="0000:00:05.0"
+    SUBSYSTEMS=="pci"
+    DRIVERS=="ena"
+    ATTRS{irq}=="0"
+    ATTRS{subsystem_vendor}=="0x0000"
+    ATTRS{broken_parity_status}=="0"
+    ATTRS{max_link_speed}=="Unknown speed"
+    ATTRS{max_link_width}=="255"
+    ATTRS{class}=="0x020000"
+    ATTRS{driver_override}=="(null)"
+    ATTRS{consistent_dma_mask_bits}=="48"
+    ATTRS{dma_mask_bits}=="48"
+    ATTRS{local_cpus}=="3"
+    ATTRS{current_link_speed}=="Unknown speed"
+    ATTRS{current_link_width}=="0"
+    ATTRS{device}=="0xec20"
+    ATTRS{enable}=="1"
+    ATTRS{msi_bus}==""
+    ATTRS{local_cpulist}=="0-1"
+    ATTRS{vendor}=="0x1d0f"
+    ATTRS{subsystem_device}=="0x0000"
+    ATTRS{numa_node}=="-1"
+    ATTRS{d3cold_allowed}=="0"
+
+  looking at parent device '/devices/pci0000:00':
+    KERNELS=="pci0000:00"
+    SUBSYSTEMS==""
+    DRIVERS==""
+```
+
+在`/etc/udev/rules.d/70-persistent-net.rules`中变更device name。
+```
+[root@d0cc44ac1f1c ~]# cd /etc/udev/rules.d/
+[root@d0cc44ac1f1c rules.d]# ls
+70-persistent-net.rules  80-net-name-slot.rules
+[root@d0cc44ac1f1c rules.d]# vim 70-persistent-net.rules 
+```
+原来的配置如下：
+```
+SUBSYSTEM=="net", ACTION=="add", DRIVERS=="?*", ATTR{address}=="0a:db:1f:a8:1d:1f", NAME="ens5"
+```
+更换至如下配置。
+```
+SUBSYSTEM=="net", ACTION=="add", DRIVERS=="?*", ATTR{address}=="0a:db:1f:a8:1d:1f", NAME="middleman"
+```
+重启后，查看网卡名称。
+```
+[cloud_user@d0cc44ac1f1c ~]$ ll /sys/class/net/ 
+total 0
+lrwxrwxrwx. 1 root root 0 Oct  4 00:01 lo -> ../../devices/virtual/net/lo
+lrwxrwxrwx. 1 root root 0 Oct  4 00:01 middleman -> ../../devices/pci0000:00/0000:00:05.0/net/middleman
+```
+
+### 其他
+udevadm可以做很多事情，比如集中管理symlink。方法是在`/etc/udev/rules.d/`中追加rule，然后用如下指令重新load。不需要reboot。
+
+```
+udevadm trigger --type=devices --action=change
+udevadm control --reload-rules
+```
+
+## SELinux和AppArmor
+
+Access Control可以分为两类，DAC(Discretionary Access Control)和MAC(Madatory Access Control。
+DAC相对来说比较随意，比如用户可以随意更改log file的权限等。 MAC就比较严格，比如说server被黑了，使用MAC可以阻止其他用户为sshd开一个新的端口。
+
+SELinux和AppArmor都是Linux Kernal实现MAC的方法。
+
+### SELinux
+
+SELinux实现access control的两个重要机制分别是`labeling`和`type enforcing`。这个label可以打在file，directory，process，甚至port上。
+所以就可以实现类似这样的要求: 打了`httpd_t`标签的process只能访问打了标签为'httpd_sys_content_t'的文件。
+
+下面举个例子。
+
+首先查看目前的SELinux的权限设定。
+
+```
+[root@d0cc44ac1f1c rules.d]# getenforce
+Enforcing
+```
+目前的设定是Enforcing，表示MAC是强制执行。你可以如下设定为permissive，就是说仅仅log error，但是不是强制拒绝访问。
+```
+[root@d0cc44ac1f1c rules.d]# setenforce 0
+[root@d0cc44ac1f1c rules.d]# getenforce
+Permissive
+```
+也可以在如下文件查看。
+```
+[root@d0cc44ac1f1c rules.d]# cat /etc/sysconfig/selinux 
+   SELINUX=enforcing
+```
+
+我们查看以下httpd的process的MAC的设置，标签是'system_r:httpd_t'。
+
+```
+[root@d0cc44ac1f1c ~]# ps auxZ | grep httpd
+system_u:system_r:httpd_t:s0    root      5244  1.0  0.2 223944  4892 ?        Ss   01:17   0:00 /usr/sbin/httpd -DFOREGROUND
+system_u:system_r:httpd_t:s0    apache    5245  0.0  0.1 223944  2808 ?        S    01:17   0:00 /usr/sbin/httpd -DFOREGROUND
+system_u:system_r:httpd_t:s0    apache    5246  0.0  0.1 223944  2808 ?        S    01:17   0:00 /usr/sbin/httpd -DFOREGROUND
+system_u:system_r:httpd_t:s0    apache    5247  0.0  0.1 223944  2808 ?        S    01:17   0:00 /usr/sbin/httpd -DFOREGROUND
+system_u:system_r:httpd_t:s0    apache    5248  0.0  0.1 223944  2808 ?        S    01:17   0:00 /usr/sbin/httpd -DFOREGROUND
+system_u:system_r:httpd_t:s0    apache    5249  0.0  0.1 223944  2808 ?        S    01:17   0:00 /usr/sbin/httpd -DFOREGROUND
+unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 root 5251 0.0  0.0 112784 732 pts/0 S+ 01:17   0:00 grep --color=auto httpd
+```
+我们直接在`/var/www/html`生成文件，然后curl访问，没有问题。
+```
+[root@d0cc44ac1f1c ~]# echo "test" > /var/www/html/index.html
+[root@d0cc44ac1f1c ~]# ls -Z /var/www/html/index.html 
+-rw-r--r--. root root unconfined_u:object_r:httpd_sys_content_t:s0 /var/www/html/index.html
+[root@d0cc44ac1f1c ~]# curl localhost
+test
+```
+
+但是，如果我们在别的地方创建文件，然后mv到`/var/www/html`，会发现文件的label改了。
+```
+[root@d0cc44ac1f1c ~]# echo "broken" >  index2.html
+[root@d0cc44ac1f1c ~]# mv index2.html /var/www/html/
+[root@d0cc44ac1f1c ~]# ls -Z /var/www/html
+-rw-r--r--. root root unconfined_u:object_r:httpd_sys_content_t:s0 index.html
+-rw-r--r--. root root unconfined_u:object_r:admin_home_t:s0 index2.html
+```
+curl访问也会有403 error。
+```
+[root@d0cc44ac1f1c ~]# curl localhost/index2.html
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<html><head>
+<title>403 Forbidden</title>
+</head><body>
+<h1>Forbidden</h1>
+<p>You don't have permission to access /index2.html
+on this server.</p>
+</body></html>
+```
+audit.log也会留下avc错误。
+```
+[root@d0cc44ac1f1c ~]# grep index2.html /var/log/audit/audit.log 
+type=AVC msg=audit(1601774514.517:1078): avc:  denied  { getattr } for  pid=5248 comm="httpd" path="/var/www/html/index2.html" dev="nvme0n1p1" ino=8710223 scontext=system_u:system_r:httpd_t:s0 tcontext=unconfined_u:object_r:admin_home_t:s0 tclass=file permissive=1
+type=AVC msg=audit(1601774514.517:1079): avc:  denied  { read } for  pid=5248 comm="httpd" name="index2.html" dev="nvme0n1p1" ino=8710223 scontext=system_u:system_r:httpd_t:s0 tcontext=unconfined_u:object_r:admin_home_t:s0 tclass=file permissive=1
+type=AVC msg=audit(1601774514.517:1079): avc:  denied  { open } for  pid=5248 comm="httpd" path="/var/www/html/index2.html" dev="nvme0n1p1" ino=8710223 scontext=system_u:system_r:httpd_t:s0 tcontext=unconfined_u:object_r:admin_home_t:s0 tclass=file permissive=1
+type=AVC msg=audit(1601774673.904:1135): avc:  denied  { getattr } for  pid=5245 comm="httpd" path="/var/www/html/index2.html" dev="nvme0n1p1" ino=8710223 scontext=system_u:system_r:httpd_t:s0 tcontext=unconfined_u:object_r:admin_home_t:s0 tclass=file permissive=0
+type=AVC msg=audit(1601774673.904:1136): avc:  denied  { getattr } for  pid=5245 comm="httpd" path="/var/www/html/index2.html" dev="nvme0n1p1" ino=8710223 scontext=system_u:system_r:httpd_t:s0 tcontext=unconfined_u:object_r:admin_home_t:s0 tclass=file permissive=0
+```
+
+但是可以使用`restorecon`恢复。
+```
+[root@d0cc44ac1f1c ~]# restorecon /var/www/html/index2.html 
+[root@d0cc44ac1f1c ~]# curl localhost/index2.html
+broken
+[root@d0cc44ac1f1c ~]# ll -Z /var/www/html/
+-rw-r--r--. root root unconfined_u:object_r:httpd_sys_content_t:s0 index.html
+-rw-r--r--. root root unconfined_u:object_r:httpd_sys_content_t:s0 index2.html
+```
+
+可以查看access control的配置。
+```
+[root@d0cc44ac1f1c ~]# semanage fcontext -l | grep httpd_sys_content_t | grep /var/www
+/var/www(/.*)?                                     all files          system_u:object_r:httpd_sys_content_t:s0 
+/var/www/icons(/.*)?                               all files          system_u:object_r:httpd_sys_content_t:s0 
+/var/www/svn/conf(/.*)?                            all files          system_u:object_r:httpd_sys_content_t:s0 
+```
+
+### AppArmor
+
+相对于SELinux，AppArmor的设定更为简单。相关介绍在[这里](https://en.wikipedia.org/wiki/AppArmor)。
+
+
+
+
+
+
+
+
+
+
 
 
 
