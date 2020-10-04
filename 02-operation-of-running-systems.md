@@ -1,5 +1,30 @@
 # Operation of Running Systems
 
+- [Operation of Running Systems](#operation-of-running-systems)
+    + [常用指令](#----)
+    + [如何更新Kernel版本](#----kernel--)
+  * [如何使用工具进行自动化](#-----------)
+  * [如何制定一个具有现实意义的Plan](#-------------plan)
+  * [如何管理已有系统的变化？](#------------)
+  * [如何选择配置管理工具(Configuraiton Management Tool)](#-----------configuraiton-management-tool-)
+  * [如何确保硬件的完整性(Integrity)和可用性(Availability)](#-----------integrity------availability-)
+    + [如何更新OS上的软件包](#----os-----)
+    + [如何进行事故（Incident）管理](#-------incident---)
+    + [如何使用sar来生成系统报告](#----sar-------)
+  * [安全审计](#----)
+  * [如何进行紧急恢复](#--------)
+    + [关于rd.break方法](#--rdbreak--)
+    + [关于recure mode和emergency mode](#--recure-mode-emergency-mode)
+  * [使用`udev`来探知和管理设备](#---udev---------)
+    + [以下说明如何使用`udev`为网卡更换名字，从'ens5'到`middleman`。](#---------udev-----------ens5---middleman--)
+    + [其他](#--)
+  * [SELinux和AppArmor](#selinux-apparmor)
+    + [SELinux](#selinux)
+    + [AppArmor](#apparmor)
+
+<small><i><a href='http://ecotrust-canada.github.io/markdown-toc/'>Table of contents generated with markdown-toc</a></i></small>
+
+
 ### 常用指令
 - top, vmstat, lsof, tcpdump, netstat, ss, htop, iotop, and iostat commands.
 - iftop, nethogs, and iptraf
@@ -615,32 +640,3 @@ broken
 ### AppArmor
 
 相对于SELinux，AppArmor的设定更为简单。相关介绍在[这里](https://en.wikipedia.org/wiki/AppArmor)。
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
