@@ -1,5 +1,17 @@
-# 使用LDAP进行用户管理
-
+- [使用LDAP进行用户管理](#--ldap------)
+  * [安装LDAP Server](#--ldap-server)
+    + [事先准备](#----)
+    + [安装](#--)
+    + [确认](#--)
+  * [客户端安装方法1: (nslcd(nss-pam-ldapd)+nscd)](#-------1---nslcd-nss-pam-ldapd--nscd-)
+    + [安装](#---1)
+    + [确认](#---1)
+  * [客户端安装方法2: (sssd+nscd)](#-------2---sssd-nscd-)
+    + [安装](#---2)
+    + [确认安装成功](#------)
+  * [参考](#--)
+  
+# 使用LDAP进行用户管理  
 ## 安装LDAP Server
 
 ### 事先准备
@@ -137,7 +149,7 @@ su - pinehead
 pwd pinehead
 ```
 
-## 安装LDAP Client 1: (nslcd(nss-pam-ldapd)+nscd)
+## 客户端安装方法1: (nslcd(nss-pam-ldapd)+nscd)
 
 ### 安装
 
@@ -169,14 +181,141 @@ ssh pinehead@localhost
 ```
 
 
-## 安装LDAP Client 2: (sssd+nscd) ------ TODO
+## 客户端安装方法2: (sssd+nscd) 
 
 ### 安装
 
+安装所需部件。
 ```
-yum install sssd sssd-client sssd-ldap openldap-clients
+yum install sssd openldap-clients nscd -y
 ```
 
+设定sssd。
+
+```
+[sssd]
+config_file_version = 2
+services = nss, pam
+domains = LDAP
+
+[domain/LDAP]
+id_provider = ldap
+auth_provider = ldap
+
+ldap_uri = ldap://172.31.44.207
+ldap_search_base = dc=la,dc=local
+
+ldap_id_use_start_tls = true
+ldap_tls_reqcert = allow
+ldap_tls_cacert = /etc/pki/tls/certs/ca-bundle.crt
+
+```
+
+启动服务。
+
+```
+systemctl start sssd
+```
+
+设定客户端认证方式。
+```
+authconfig --enablesssd --enablesssdauth --enablemkhomedir --update
+```
+
+### 确认安装成功
+
+确认`nsswitch.conf` 已经挂上了sss。
+
+```
+# cat /etc/nsswitch.conf
+#
+# /etc/nsswitch.conf
+#
+# An example Name Service Switch config file. This file should be
+# sorted with the most-used services at the beginning.
+#
+# The entry '[NOTFOUND=return]' means that the search for an
+# entry should stop if the search in the previous entry turned
+# up nothing. Note that if the search failed due to some other reason
+# (like no NIS server responding) then the search continues with the
+# next entry.
+#
+# Valid entries include:
+#
+#	nisplus			Use NIS+ (NIS version 3)
+#	nis			Use NIS (NIS version 2), also called YP
+#	dns			Use DNS (Domain Name Service)
+#	files			Use the local files
+#	db			Use the local database (.db) files
+#	compat			Use NIS on compat mode
+#	hesiod			Use Hesiod for user lookups
+#	[NOTFOUND=return]	Stop searching if not found so far
+#
+
+# To use db, put the "db" in front of "files" for entries you want to be
+# looked up first in the databases
+#
+# Example:
+#passwd:    db files nisplus nis
+#shadow:    db files nisplus nis
+#group:     db files nisplus nis
+
+passwd:     files sss
+shadow:     files sss
+group:      files sss
+#initgroups: files
+
+#hosts:     db files nisplus nis dns
+hosts:      files dns myhostname
+
+# Example - obey only what nisplus tells us...
+#services:   nisplus [NOTFOUND=return] files
+#networks:   nisplus [NOTFOUND=return] files
+#protocols:  nisplus [NOTFOUND=return] files
+#rpc:        nisplus [NOTFOUND=return] files
+#ethers:     nisplus [NOTFOUND=return] files
+#netmasks:   nisplus [NOTFOUND=return] files     
+
+bootparams: nisplus [NOTFOUND=return] files
+
+ethers:     files
+netmasks:   files
+networks:   files
+protocols:  files
+rpc:        files
+services:   files sss
+
+netgroup:   files sss
+
+publickey:  nisplus
+
+automount:  files
+aliases:    files nisplus
+
+```
+
+用一个测试用户`pinehead` 确认可以取得ID。
+
+```
+id pinehead
+uid=9999(pinehead) gid=100(users) groups=100(users)
+```
+使用不同方法继续确认。
+```
+getent passwd pinehead
+pinehead:*:9999:100:pinehead [Lead Penguin (at) Linux Academy]:/home/pinehead:/bin/bash
+```
+使用ssh继续确认。
+```
+[root@ce9ce2f42a1c ~]# ssh pinehead@localhost
+Password: 
+Creating home directory for pinehead.
+[pinehead@ce9ce2f42a1c ~]$ pwd
+/home/pinehead
+```
 
 ## 参考
-- [OPENLDAP](https://access.redhat.com/documentation/en-Us/red_hat_enterprise_linux/7/html/system-level_authentication_guide/openldap)
+
+- [RedHat OPENLDAP](https://access.redhat.com/documentation/en-Us/red_hat_enterprise_linux/7/html/system-level_authentication_guide/openldap)
+- [RedHat CONFIGURING IDENTITY AND AUTHENTICATION PROVIDERS FOR SSSD](https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/7/html/system-level_authentication_guide/configuring_domains)
+- [Name Service Switch](https://en.wikipedia.org/wiki/Name_Service_Switch)
