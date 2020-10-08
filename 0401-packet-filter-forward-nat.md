@@ -8,7 +8,7 @@
 ![](https://upload.wikimedia.org/wikipedia/commons/3/37/Netfilter-packet-flow.svg)
 
 
-# 参考资料
+# 请阅读以下资料
 
 
 - [netfilter位于内核的那一层](https://blog.csdn.net/MAOTIANWANG/article/details/17410069)
@@ -25,7 +25,7 @@
 
 ## 练习
 
-在基本理解了以上参考资料以后，请尝试完成以下练习。
+在基本理解了以上资料以后，请尝试完成以下练习。
 
 1. 你有两台机器Server和Client。Server有两块网卡哦eth0, eth1。eth0同时具有公网和内网IP，eth1仅有内网IP。Client仅有一块网卡eth0绑定内网IP。你需要实现NAT，使得你可以直接从Client上网运行比如"ping google.com"或者"yum install httpd"这样的命令。
 
