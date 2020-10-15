@@ -17,4 +17,7 @@
 4. Networking
 5. Service Configuration
 6. Storage Management
-7. System Design and Deployment
+7. 系统设计以及部署
+  - [使用rpm打包](0701-use-rpm-to-build-package.md)
+
+
