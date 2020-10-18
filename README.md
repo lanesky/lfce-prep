@@ -16,8 +16,9 @@
 3. [使用LDAP进行用户管理](03-user-and-group-management.md)
 4. Networking
 5. Service Configuration
+  - 5.1 [安装DNS服务器](0501-setup-dns-server.md)
 6. Storage Management
 7. 系统设计以及部署
-  - [使用rpm打包](0701-use-rpm-to-build-package.md)
+  - 7.1 [使用rpm打包](0701-use-rpm-to-build-package.md)
 
 
