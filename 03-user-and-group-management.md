@@ -1,5 +1,10 @@
 # 使用LDAP进行用户管理  
 
+https://cloud.tencent.com/developer/article/1026304
+https://blog.51cto.com/11093860/2318657
+https://blog.51cto.com/11093860/2161809
+https://wiki.gentoo.org/wiki/Centralized_authentication_using_OpenLDAP/zh
+
 ## 安装LDAP Server
 
 ### 事先准备
