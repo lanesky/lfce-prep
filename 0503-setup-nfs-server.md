@@ -75,6 +75,14 @@ mount
 
 ### TODO:视频演示
 
+### 延伸阅读
+
+关于文件权限，用户及组权限的设定等，推荐阅读`鸟哥的Linux私房菜`的以下章节。
+
+- [第六章、Linux 的文件权限与目录配置](http://cn.linux.vbird.org/linux_basic/0210filepermission.php)
+- [第十四章、Linux 账号管理与 ACL 权限配置](http://cn.linux.vbird.org/linux_basic/0410accountmanager_3.php)
+- [第八章、Linux 磁盘与文件系统管理](http://cn.linux.vbird.org/linux_basic/0230filesystem.php)
+
 
 
 
