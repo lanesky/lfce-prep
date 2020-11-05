@@ -640,3 +640,41 @@ broken
 ### AppArmor
 
 相对于SELinux，AppArmor的设定更为简单。相关介绍在[这里](https://en.wikipedia.org/wiki/AppArmor)。
+
+
+## 场景练习1
+
+### 概要
+
+你有一个Block设备`/dev/xvdw1`，包含一个没有被装置的ext4的文件系统。为了便于识别，你需要使用`udev`创建一个symlink，名为`/dev/myblock_data`。
+
+### 实现方法
+
+新建udev的规则。
+```
+cd /etc/udev/rules.d/
+vim 99-mydisk-name.rules
+```
+
+内容如下：
+```
+KERNEL=="xvdw1", SYMLINK+="myblock_data"
+```
+
+重新加载。
+```
+udevadm trigger --type=devices --action=change
+udevadm control --reload-rules
+```
+
+确认。
+```
+ll /dev/myblock_data
+```
+
+
+### 延伸阅读
+
+- `鸟哥的Linux私房菜` 之[第二十一章、系统配置工具(网络与打印机)与硬件侦测](http://cn.linux.vbird.org/linux_basic/0610hardware.php#udev)
+- `鸟哥的Linux私房菜` 之[第十六章、程序管理與 SELinux 初探](http://linux.vbird.org/linux_basic/0440processcontrol.php)
+
