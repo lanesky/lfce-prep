@@ -21,7 +21,7 @@
   - 5.1 [安装DNS服务器](0501-setup-dns-server.md)
   - 5.2 [配置邮件服务器](0502-setup-smtp-server.md)
   - 5.2 [配置NFS服务器](0503-setup-nfs-server.md)
-6. Storage Management
+6. [Storage Management](06-storage-management.md)
 7. 系统设计以及部署
   - 7.1 [使用rpm打包](0701-use-rpm-to-build-package.md)
 
