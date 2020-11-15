@@ -642,7 +642,7 @@ broken
 相对于SELinux，AppArmor的设定更为简单。相关介绍在[这里](https://en.wikipedia.org/wiki/AppArmor)。
 
 
-## 场景练习1
+## 练习1
 
 ### 概要
 
@@ -677,4 +677,35 @@ ll /dev/myblock_data
 
 - `鸟哥的Linux私房菜` 之[第二十一章、系统配置工具(网络与打印机)与硬件侦测](http://cn.linux.vbird.org/linux_basic/0610hardware.php#udev)
 - `鸟哥的Linux私房菜` 之[第十六章、程序管理與 SELinux 初探](http://linux.vbird.org/linux_basic/0440processcontrol.php)
+
+## 练习2
+
+### 概要
+
+你使用了SELinux的MAC。然后你发现无法启动MySql Service。请问如何调查。
+
+### 调查方法
+
+如果无法启动服务，应该会出现以下类似的错误。那么通过观察Log，可以大致判断出有问题的地方。
+```
+~]# systemctl start mariadb.service
+Job for mariadb.service failed. See 'systemctl status postgresql.service' and 'journalctl -xn' for details.
+```
+
+如果有类似的log，则可以按照指示运行`sealert -l xxxxxx`得到详细的错误。
+```
+SELinux is preventing /usr/libexec/mysqld "write" access on /mysql. For complete SELinux messages. run sealert -l b3f01aff-7fa6-4ebe-ad46-abaef6f8ad71
+```
+
+重置安全性本文可以采用类似如下的命令。
+```
+semanage fcontext -a -t mysqld_db_t "/mysql(/.*)?"
+```
+
+### 延伸阅读
+
+- `鸟哥的Linux私房菜` 之[第十七章、程序管理与 SELinux 初探（简体字版）](http://cn.linux.vbird.org/linux_basic/0440processcontrol.php#selinux)
+- [Red Hat MariaDB 設定例](https://access.redhat.com/documentation/ja-jp/red_hat_enterprise_linux/7/html/selinux_users_and_administrators_guide/sect-managing_confined_services-mariadb-configuration_examples)
+
+
 
