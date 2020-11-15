@@ -708,4 +708,45 @@ semanage fcontext -a -t mysqld_db_t "/mysql(/.*)?"
 - [Red Hat MariaDB 設定例](https://access.redhat.com/documentation/ja-jp/red_hat_enterprise_linux/7/html/selinux_users_and_administrators_guide/sect-managing_confined_services-mariadb-configuration_examples)
 
 
+## 练习3
 
+安装一个特定Kernel，并reboot后自动加载。
+
+### 步骤
+
+查看GRUB的通用配置。
+```
+cat /etc/default/grub
+```
+
+查看启动菜单中的默认操作系统选项中所定义的"saved"的详细。
+```
+cat /boot/grub2/grubenv
+```
+
+查看可以选择的Kernel镜像。
+```
+sudo awk -F\' /^menuentry/{print\$2} /etc/grub2.cfg
+```
+
+使用uname -a 查看当前的OS的Kernel版本。
+
+更改启动菜单中的默认操作系统选项。
+```
+grub2-set-default 2
+```
+
+更改完成后，确认看启动菜单中的默认操作系统选项已经完成更改。
+```
+grep saved /boot/grub2/grubenv
+```
+
+使用grub2-mkconfig来生成/boot/grub2/grub.cfg ，这是 GRUB2 所使用的唯一的直接的配置文件。
+```
+grub2-mkconfig -o /boot/grub2/grub.cfg
+```
+
+
+### 延伸阅读
+
+- `鸟哥的Linux私房菜` [19.3 Boot Loader: Grub2](https://muicoder.github.io/linux_basic/0510osloader.html#grub)
