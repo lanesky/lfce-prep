@@ -10,4 +10,38 @@
 
 
 ## 参考
-RPM的功能实际上相当多的，RPM SPEC的各种语法，macro也是相当的繁多。具体的内容可以参考[Maximum RPM](http://ftp.rpm.org/max-rpm/).
+RPM的功能实际上相当多的，RPM SPEC的各种语法，macro也是相当的繁多。具体的内容可以参考:
+- [Maximum RPM](http://ftp.rpm.org/max-rpm/).
+- `鸟哥的Linux私房菜` [第二十三章、软件安装： RPM, SRPM 与 YUM 功能](http://cn.linux.vbird.org/linux_basic/0520rpm_and_srpm.php)
+
+## Cheat sheet
+
+安装所需有的工具。
+```
+yuminstall @"Development Tools" mock rpmdevtools rpmlint
+```
+
+建立空目录。
+```
+rpmdev-setuptree
+```
+
+建立新的SPEC文件。
+```
+rpmdev-newspec hello
+```
+
+打包。
+```
+rpmbuild -ba 
+```
+
+使用列出已有Key Pair。
+```
+gpg --list-keys
+```
+
+使用GPG给包签名。
+```
+gpg --add-sign xxx.rpm
+```
